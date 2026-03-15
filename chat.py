@@ -45,7 +45,7 @@ def save_history(history):
 print("🤖 Your PDF chatbot is ready!")
 print("Type 'quit' to exit\n")
 
-history = load_history()
+history = load_history()[-10:]
 
 while True:
     question = input("You: ")
