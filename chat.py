@@ -9,14 +9,11 @@ import os
 
 # Load the vector store
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-
 vectorstore = Chroma(
     persist_directory="./chroma_db",
     embedding_function=embeddings
 )
-
 retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
-
 llm = ChatGroq(
     model="llama-3.3-70b-versatile",
     api_key=os.environ["GROQ_API_KEY"]
@@ -24,20 +21,31 @@ llm = ChatGroq(
 
 prompt = ChatPromptTemplate.from_template("""
 Answer the question based on the context and conversation history below.
-
 Context: {context}
-
 Conversation History: {history}
-
 Question: {question}
 """)
 
 chain = prompt | llm | StrOutputParser()
 
+# ── Persistent Memory ──────────────────
+HISTORY_FILE = "chat_history.txt"
+
+def load_history():
+    if os.path.exists(HISTORY_FILE):
+        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+            return f.readlines()
+    return []
+
+def save_history(history):
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        f.writelines(history)
+# ───────────────────────────────────────
+
 print("🤖 Your PDF chatbot is ready!")
 print("Type 'quit' to exit\n")
 
-history = []
+history = load_history()
 
 while True:
     question = input("You: ")
@@ -46,7 +54,7 @@ while True:
 
     docs = retriever.invoke(question)
     context = "\n".join([doc.page_content for doc in docs])
-    history_text = "\n".join(history)
+    history_text = "".join(history)
 
     response = chain.invoke({
         "question": question,
@@ -54,7 +62,8 @@ while True:
         "history": history_text
     })
 
-    history.append(f"You: {question}")
-    history.append(f"AI: {response}")
+    history.append(f"You: {question}\n")
+    history.append(f"AI: {response}\n")
+    save_history(history)
 
     print(f"\n🤖 AI: {response}\n")
