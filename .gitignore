@@ -5,4 +5,4 @@ __pycache__/
 *.pyc
 chat_history.txt
 .vscode/
-*.txt
+chat_history.txt
