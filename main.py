@@ -15,12 +15,21 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 # PART 2 — Setup the kitchen
-embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-vectorstore = Chroma(
-    persist_directory="./chroma_db",
-    embedding_function=embeddings
-)
-retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
+embeddings = None
+vectorstore = None
+retriever = None
+
+def get_retriever():
+    global embeddings, vectorstore, retriever
+    if retriever is None:
+        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        vectorstore = Chroma(
+            persist_directory="./chroma_db",
+            embedding_function=embeddings
+        )
+        retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
+    return retriever
+
 llm = ChatGroq(
     model="llama-3.3-70b-versatile",
     api_key=os.environ["GROQ_API_KEY"]
@@ -54,7 +63,7 @@ def home():
 
 @app.post("/ask")
 def ask(body: Question):
-    docs = retriever.invoke(body.question)
+    docs = get_retriever().invoke(body.question)
     context = "\n".join([doc.page_content for doc in docs])
     
     response = chain.invoke({
