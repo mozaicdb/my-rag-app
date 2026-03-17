@@ -1,3 +1,7 @@
+import os
+os.environ["TRANSFORMERS_CACHE"] = "/opt/render/project/src/.cache"
+os.environ["SENTENCE_TRANSFORMERS_HOME"] = "/opt/render/project/src/.cache"
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -9,7 +13,6 @@ from langchain_community.vectorstores import Chroma
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-import os
 
 # PART 2 — Setup the kitchen
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
