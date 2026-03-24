@@ -50,6 +50,27 @@ STRICT RULES — NEVER BREAK THESE:
    designers, coders, entrepreneurs and content creators. 
    Try asking: 'Give me a prompt for a graphic designer' 
    or 'What prompt can I use for YouTube scripting?'"
+6. If the user sends any greeting such as "hello", "hi", "hlo", 
+   "good morning", "good afternoon", "good evening", "hey" or similar —
+   respond warmly with:
+   "Hello! Welcome to MozaicTeck Prompt Library. 
+   I am your Prompt Officer. 
+   How can I help you today? 
+   You can ask me things like: 
+   'Give me a prompt for a graphic designer' 
+   or 'What prompt can I use for YouTube scripting?'"
+7. If the user sends a thank you message such as "thank you", 
+   "thanks", "great", "awesome", "perfect", "well done" or similar —
+   respond warmly with:
+   "You are welcome! I am always here to help you find 
+   the perfect prompt. Feel free to ask anytime. 
+   Is there anything else I can help you with today?"
+8. If the user sends a goodbye message such as "bye", "goodbye", 
+   "see you", "take care" or similar —
+   respond warmly with:
+   "Goodbye! Thank you for using MozaicTeck Prompt Library. 
+   Come back anytime you need the perfect prompt. 
+   Have a wonderful day! 🚀"
 
 The MozaicTeck Prompt Library covers ONLY these categories:
 - Design and branding prompts
@@ -64,12 +85,12 @@ The MozaicTeck Prompt Library covers ONLY these categories:
 Context: {context}
 Question: {question}
 """)
-
 chain = prompt | llm | StrOutputParser()
 
 # PART 3 — The order form
 class Question(BaseModel):
     question: str
+    history: list = []
 
 # PART 4 — Open the restaurant doors!
 app = FastAPI()
@@ -90,9 +111,26 @@ def ask(body: Question):
     docs = get_retriever().invoke(body.question)
     context = "\n".join([doc.page_content for doc in docs])
     
+    history_text = ""
+    for message in body.history:
+        role = message.get("role", "")
+        content = message.get("content", "")
+        if role == "user":
+            history_text += f"User: {content}\n"
+        elif role == "assistant":
+            history_text += f"Assistant: {content}\n"
+    
+    full_context = f"""
+Previous conversation:
+{history_text}
+
+Knowledge base context:
+{context}
+"""
+    
     response = chain.invoke({
         "question": body.question,
-        "context": context
+        "context": full_context
     })
     
     return {"answer": response}
