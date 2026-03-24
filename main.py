@@ -90,6 +90,7 @@ chain = prompt | llm | StrOutputParser()
 # PART 3 — The order form
 class Question(BaseModel):
     question: str
+    history: list = []
 
 # PART 4 — Open the restaurant doors!
 app = FastAPI()
@@ -110,9 +111,26 @@ def ask(body: Question):
     docs = get_retriever().invoke(body.question)
     context = "\n".join([doc.page_content for doc in docs])
     
+    history_text = ""
+    for message in body.history:
+        role = message.get("role", "")
+        content = message.get("content", "")
+        if role == "user":
+            history_text += f"User: {content}\n"
+        elif role == "assistant":
+            history_text += f"Assistant: {content}\n"
+    
+    full_context = f"""
+Previous conversation:
+{history_text}
+
+Knowledge base context:
+{context}
+"""
+    
     response = chain.invoke({
         "question": body.question,
-        "context": context
+        "context": full_context
     })
     
     return {"answer": response}
