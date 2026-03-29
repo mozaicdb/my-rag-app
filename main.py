@@ -134,9 +134,17 @@ Knowledge base context:
 {context}
 """
     
-    response = chain.invoke({
-        "question": body.question,
-        "context": full_context
-    })
-    
-    return {"answer": response}
+    try:
+        response = chain.invoke({
+            "question": body.question,
+            "context": full_context
+        })
+        return {"answer": response}
+
+    except Exception as e:
+        error_message = str(e)
+        
+        if "rate_limit" in error_message:
+            return {"answer": "I am currently at capacity. Please try again in a few minutes."}
+        
+        return {"answer": "Something went wrong. Please try again."}
