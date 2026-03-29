@@ -6,3 +6,5 @@ chroma_db/
 mozaicteck-rag/
 chat_history.txt
 .vscode/
+test_post.py
+linkedin_post.txt
